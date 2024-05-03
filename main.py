@@ -2,13 +2,26 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 import time
 
 # URL to scrape
 url = 'https://wenewz.com/#/front'
 
-# Create a new instance of the Firefox driver
-driver = webdriver.Firefox()
+# Create a new Firefox profile
+profile = webdriver.FirefoxProfile()
+
+# Set the preference to Norwegian Bokmål
+profile.set_preference("intl.accept_languages", "nb")
+
+# Create a new instance of FirefoxOptions
+options = Options()
+
+# Set the profile in options
+options.profile = profile
+
+# Create a new instance of the Firefox driver with the options
+driver = webdriver.Firefox(options=options)
 
 # Go to the URL
 driver.get(url)
@@ -16,7 +29,8 @@ driver.get(url)
 # Wait until at least one link with the specific class name is present
 WebDriverWait(driver, 10).until(
     EC.presence_of_element_located(
-        (By.CSS_SELECTOR, "a.noBorder.v-card.v-card--flat.v-card--link.v-sheet.v-sheet--outlined.theme--light.rounded-0"))
+        (By.CSS_SELECTOR,
+         "a.noBorder.v-card.v-card--flat.v-card--link.v-sheet.v-sheet--outlined.theme--light.rounded-0"))
 )
 
 # Set the display style of the header element to none
@@ -30,7 +44,7 @@ driver.execute_script(
 start_time = time.time()
 
 # Set a time limit in minutes
-minutes = 100
+minutes = 60
 
 # Convert the time limit to seconds
 time_limit = minutes * 60
@@ -70,10 +84,10 @@ while time.time() - start_time < time_limit:
         print(f'Clicked link: {href} (Link {clicked_links})')
 
         # Wait until the close button is clickable
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "a[title='Close Window']"))
-        )
+        # WebDriverWait(driver, 10).until(
+        #     EC.element_to_be_clickable(
+        #         (By.CSS_SELECTOR, "a[title='Lukk vindu']"))
+        # )
 
         # Use JavaScript to set the display property to none
         driver.execute_script(
@@ -91,16 +105,20 @@ while time.time() - start_time < time_limit:
             "document.querySelector('.pa-3.mb-2.v-card.v-sheet.theme--light.red.darken-4').style.display = 'none';")
 
         # Add a delay to allow any animations or overlays to finish
-        time.sleep(2)
+        time.sleep(4)
 
         # Find the close button and click it
-        close_button = driver.find_element(
-            By.CSS_SELECTOR, "a[title='Close Window']")
+        close_button = WebDriverWait(
+            driver, 10).until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "a[title='Lukk vindu']")))
+
+        # Click the close button
         close_button.click()
 
         # Find all links again after clicking the current link
         links = driver.find_elements(
-            By.CSS_SELECTOR, "a.noBorder.v-card.v-card--flat.v-card--link.v-sheet.v-sheet--outlined.theme--light.rounded-0")
+            By.CSS_SELECTOR,
+            "a.noBorder.v-card.v-card--flat.v-card--link.v-sheet.v-sheet--outlined.theme--light.rounded-0")
 
 # Print the total number of clicked links
 print(f'Total clicked links: {clicked_links}')
